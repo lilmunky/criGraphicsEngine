@@ -1,155 +1,233 @@
-#include "stdafx.h"
+#include "thin_windows.h"
 #include "windowsUI.h"
 #include "logger.h"
-#include <comdef.h>
-#include <sstream>
 
-string WindowsUI::wndName = "CriEngine";
-string WindowsUI::wndClassName = "EngineMainWindow";
-HINSTANCE WindowsUI::t_hInstance = NULL;
-
-LRESULT WindowsUI::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+WindowsUI::WindowsUI()
 {
-    switch (uMsg)
-    {
-    case WM_CLOSE:
-    {
-        HMENU hMenu;
-        hMenu = GetMenu(hWnd);
-        if (hMenu != NULL)
-        {
-            DestroyMenu(hMenu);
-        }
-
-        DestroyWindow(hWnd);
-
-        UnregisterClass(
-            wndClassName.c_str(),
-            t_hInstance
-        );
-
-        return 0;
-    }
-
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        break;
-    }
-
-    return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-void WindowsUI::FillWndClass()
+WindowsUI::WindowsUI(const WindowsUI &)
 {
-    char szExePath[MAX_PATH];
-    GetModuleFileName(NULL, szExePath, MAX_PATH);
-    if (hIcon == NULL) {
-        hIcon = ExtractIcon(t_hInstance, szExePath, 0);
-    }
-
-    wndClass.style = CS_DBLCLKS;
-    wndClass.lpfnWndProc = WindowProc;
-    wndClass.cbClsExtra = 0;
-    wndClass.cbWndExtra = 0;
-    wndClass.hInstance = t_hInstance;
-    wndClass.hIcon = hIcon;
-    wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-    wndClass.lpszMenuName = NULL;
-    wndClass.lpszClassName = wndClassName.c_str();
 }
 
-void WindowsUI::InitWindowCreation()
+WindowsUI::~WindowsUI()
 {
-    if (!RegisterClass(&wndClass)) {
-        DWORD dwError = GetLastError();
-        if (dwError != ERROR_CLASS_ALREADY_EXISTS) {
-            _com_error err(dwError);
-            stringstream strErr;
-            strErr << hex << dwError;
-            Logger::Log("Error registering window class: 0x" + strErr.str() + " - " + err.ErrorMessage());
-            abort();
-        }
-    }
-
-    RECT totalWndRect;
-    SetRect(&totalWndRect, 0, 0, pixelWidth, pixelHeight);
-    AdjustWindowRect(&totalWndRect, WS_OVERLAPPEDWINDOW, FALSE);
-
-    mainWindowHandler = CreateWindowEx(0,
-                                       wndClassName.c_str(),
-                                       wndName.c_str(),
-                                       WS_OVERLAPPEDWINDOW,
-                                       CW_USEDEFAULT, CW_USEDEFAULT,
-                                       totalWndRect.right - totalWndRect.left, totalWndRect.bottom - totalWndRect.top,
-                                       NULL,
-                                       NULL,
-                                       t_hInstance,
-                                       NULL);
-
-    if (mainWindowHandler == NULL)
-    {
-        DWORD dwError = GetLastError();
-        _com_error err(dwError);
-        stringstream strErr;
-        strErr << hex << dwError;
-        Logger::Log("Error creating window: 0x" + strErr.str() + " - " + err.ErrorMessage());
-        abort();
-    }
-
-
 }
 
-int WindowsUI::MainLoop()
+bool WindowsUI::Initialize()
 {
-    bool gotMsg;
-    MSG  msg;
-    msg.message = WM_NULL;
-    PeekMessage(&msg, NULL, 0U, 0U, PM_NOREMOVE);
+    int pixelWidth, pixelHeight;
+    bool result;
 
-    while (WM_QUIT != msg.message)
+    pixelWidth = 0;
+    pixelHeight = 0;
+
+    InitializeWindows(pixelWidth, pixelHeight);
+
+    return true;
+}
+
+void WindowsUI::Shutdown()
+{
+    ShutdownWindows();
+
+    return;
+}
+
+void WindowsUI::Run()
+{
+    MSG msg;
+    bool done, result;
+
+    ZeroMemory(&msg, sizeof(MSG));
+
+    done = false;
+    while (!done)
     {
-        gotMsg = (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE) != 0);
-
-        if (gotMsg)
+        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+
+        if (msg.message == WM_QUIT)
+        {
+            done = true;
+        }
         else
         {
-            //// Update the scene.
-            //renderer->Update();
-
-            //// Render frames during idle time (when no messages are waiting).
-            //renderer->Render();
-
-            //// Present the frame to the screen.
-            //deviceResources->Present();
+            result = Frame();
+            if (!result)
+            {
+                done = true;
+            }
         }
     }
-    return 0;
 }
 
-WindowsUI::WindowsUI() {
-
-}
-
-WindowsUI::~WindowsUI() {
-
-}
-
-int WindowsUI::UIMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nCmdShow)
+bool WindowsUI::SetFullscreen(const bool & setToFullScreen)
 {
-    t_hInstance = hInstance;
+    DWORD wndStyle = 0;
+    LONG_PTR result;
 
-    FillWndClass();
+    if (setToFullScreen && !isFullscreen) {
+        wndStyle |= WS_POPUP;
+        result = SetWindowLongPtr(wndHandle, GWL_STYLE, wndStyle);
 
-    InitWindowCreation();
+        if (!result) {
+            Logger::LogWindowsErrorCode("setting window to fullscreen");
+            return false;
+        }
 
-    ShowWindow(mainWindowHandler, SW_SHOW);
+        isFullscreen = true;
+        return true;
+    }
 
-    MainLoop();
+    if (!setToFullScreen) {
+        wndStyle |= WS_SYSMENU | WS_MINIMIZEBOX;
+        result = SetWindowLongPtr(wndHandle, GWL_STYLE, wndStyle);
 
-    return 0;
+        if (!result) {
+            Logger::LogWindowsErrorCode("setting window to windowed");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+LRESULT WindowsUI::MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        default:
+        {
+            return DefWindowProc(hWnd, uMsg, wParam, lParam);
+        }
+    }
+}
+
+LRESULT WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_DESTROY:
+        {
+            PostQuitMessage(0);
+            return 0;
+        }
+
+        case WM_CLOSE:
+        {
+            PostQuitMessage(0);
+            return 0;
+        }
+
+        default:
+        {
+            return ApplicationHandle->MessageHandler(hWnd, uMsg, wParam, lParam);
+        }
+    }
+}
+
+bool WindowsUI::Frame()
+{
+    return true;
+}
+
+void WindowsUI::InitializeWindows(int & pixelWidth, int & pixelHeight)
+{
+    WNDCLASSEX wc;
+    DEVMODE dmScreenSettings;
+    int posX, posY;
+    DWORD wndStyle = 0;
+
+    ApplicationHandle = this;
+
+    wndInstance = GetModuleHandle(NULL);
+
+    wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+    wc.lpfnWndProc = WindowProc;
+    wc.cbClsExtra = 0;
+    wc.cbWndExtra = 0;
+    wc.hInstance = wndInstance;
+    wc.hIcon = LoadIcon(NULL, IDI_WINLOGO);
+    wc.hIconSm = wc.hIcon;
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    wc.lpszMenuName = NULL;
+    wc.lpszClassName = wndClassName;
+    wc.cbSize = sizeof(WNDCLASSEX);
+
+    RegisterClassEx(&wc);
+
+    pixelWidth = GetSystemMetrics(SM_CXSCREEN);
+    pixelHeight = GetSystemMetrics(SM_CYSCREEN);
+
+    if (false) //(FULL_SCREEN)
+    {
+        ZeroMemory(&dmScreenSettings, sizeof(dmScreenSettings));
+        dmScreenSettings.dmSize = sizeof(dmScreenSettings);
+        dmScreenSettings.dmPelsWidth = (unsigned long)pixelWidth;
+        dmScreenSettings.dmPelsHeight = (unsigned long)pixelHeight;
+        dmScreenSettings.dmBitsPerPel = 32;
+        dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
+
+        ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN);
+
+        posX = posY = 0;
+
+        wndStyle |= WS_POPUP;
+
+        isFullscreen = true;
+    }
+    else
+    {
+        pixelWidth = 640;
+        pixelHeight = 480;
+
+        posX = (GetSystemMetrics(SM_CXSCREEN) - pixelWidth) / 2;
+        posY = (GetSystemMetrics(SM_CYSCREEN) - pixelHeight) / 2;
+
+        wndStyle |= WS_SYSMENU | WS_MINIMIZEBOX;
+
+        isFullscreen = false;
+    }
+
+    wndHandle = CreateWindowEx(
+        WS_EX_APPWINDOW, 
+        wndClassName, 
+        wndName,
+        wndStyle,
+        posX,
+        posY,
+        pixelWidth,
+        pixelHeight,
+        NULL,
+        NULL,
+        wndInstance,
+        NULL
+    );
+
+    ShowWindow(wndHandle, SW_SHOW);
+    SetForegroundWindow(wndHandle);
+    SetFocus(wndHandle);
+
+    return;
+}
+
+void WindowsUI::ShutdownWindows()
+{
+    if (false) //(FULL_SCREEN)
+    {
+        ChangeDisplaySettings(NULL, 0);
+    }
+
+    DestroyWindow(wndHandle);
+    wndHandle = NULL;
+
+    UnregisterClass(wndClassName, wndInstance);
+    wndInstance = NULL;
+
+    ApplicationHandle = NULL;
 }

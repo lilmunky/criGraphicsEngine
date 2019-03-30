@@ -1,13 +1,15 @@
-#pragma once
-#include "stdafx.h"
+#include "thin_windows.h"
+#include <iostream>
 #include "logger.h"
 #include <fstream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <chrono>
 #include <ctime>
+#include <comdef.h>
+#include <sstream>
 
-using namespace std::chrono;
+using namespace chrono;
 
 bool Logger::errorInit = false;
 bool Logger::initialized = false;
@@ -101,6 +103,23 @@ void Logger::Log(const string& text)
     logFile << text.c_str() << endl;
     
     logFile.close();
+}
+
+void Logger::LogWindowsErrorCode(const string& context)
+{
+    DWORD dwError = GetLastError();
+    _com_error err(dwError);
+    stringstream strErr;
+    strErr << hex << dwError;
+    Logger::Log("Error " + context + ": 0x" + strErr.str() + " - " + err.ErrorMessage());
+}
+
+void Logger::LogD3DErrorCode(const string& context, const HRESULT& errorCode)
+{
+    _com_error err(errorCode);
+    stringstream strErr;
+    strErr << hex << errorCode;
+    Logger::Log("Directx error - " + context + ": 0x" + strErr.str() + " - " + err.ErrorMessage());
 }
 
 string CombinePaths(const string& p1, const string& p2) {

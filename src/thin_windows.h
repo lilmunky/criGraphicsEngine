@@ -4,9 +4,9 @@
 //#define NOVIRTUALKEYCODES // VK_ *
 //#define NOWINMESSAGES // WM_ * , EM_*, LB_*, CB_*
 //#define NOWINSTYLES // WS_ * , CS_*, ES_*, LBS_*, SBS_*, CBS_*
-#define NOSYSMETRICS // SM_ *
+//#define NOSYSMETRICS // SM_ *
 //#define NOMENUS // MF_ *
-#define NOICONS // IDI_ *
+//#define NOICONS // IDI_ *
 //#define NOKEYSTATES // MK_ *
 #define NOSYSCOMMANDS // SC_ *
 #define NORASTEROPS // Binary and Tertiary raster ops
@@ -47,7 +47,7 @@
 
 #define STRICT
 
-#include <iostream>
-#include <Windows.h>
+#define WIN32_LEAN_AND_MEAN
 
-using namespace std;
+#include <windows.h>
+#include <shellapi.h> // For ExtractIcon

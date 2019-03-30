@@ -1,5 +1,9 @@
 #pragma once
 
+#include <iostream>
+
+using namespace std;
+
 class LoggerDestroyer {
 public:
     LoggerDestroyer();
@@ -24,10 +28,12 @@ private:
     static void LogNoFormat(const string& text);
 
 public:
+    virtual ~Logger() = 0;
+
     static void InitLog();
     static void Log(const string& text);
-
-    virtual ~Logger() = 0;
+    static void LogWindowsErrorCode(const string& context);
+    static void LogD3DErrorCode(const string& context, const HRESULT& errorCode);
 };
 
 string CombinePaths(const string& p1, const string& p2);
