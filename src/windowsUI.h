@@ -5,30 +5,37 @@
 class WindowsUI {
 public:
     WindowsUI();
-    WindowsUI(const WindowsUI&);
+    WindowsUI(const WindowsUI&) = delete;
+    WindowsUI& operator=(const WindowsUI&) = delete;
     ~WindowsUI();
 
-    bool Initialize();
+    bool NewWindow(const LPCSTR& windowName, const bool& setToFullScreen);
     void Shutdown();
-    void Run();
+    int Run();
 
     bool SetFullscreen(const bool& setToFullScreen);
-
-    LRESULT MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    bool WindowExists();
 
 private:
-    LPCSTR wndName = "CriEngine";
-    LPCSTR wndClassName = "Engine";
-    HINSTANCE wndInstance;
+    static int nWindows;
     HWND wndHandle;
-    bool isFullscreen;
+    static HINSTANCE appInstance;
+    const LPCSTR wndClassName = "Engine";
+    LPCSTR wndName;
 
-    //GraphicsClass graphics;
+    bool isFullscreen;
+    int pixelWidth;
+    int pixelHeight;
+    int defaultPixelWidth = 640;
+    int defaultPixelHeight = 480;
 
     bool Frame();
-    void InitializeWindows(int& pixelWidth, int& pixelHeight);
-    void ShutdownWindows();
-};
+    bool InitializeWindow(const bool& setToFullScreen);
+    bool RegisterWndClass();
+    void UnregisterWndClass();
+    void ShutdownWindow();
 
-static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-static WindowsUI* ApplicationHandle = 0;
+    LRESULT MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK MsgForwarderSetup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK MsgForwarder(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+};

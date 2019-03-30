@@ -1,28 +1,38 @@
 #include "thin_windows.h"
-#include "windowsUI.h"
 #include "logger.h"
+#include "windowsUI.h"
 
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nCmdShow)
 {
     Logger::InitLog();
-    //TODO: find good implementation for crossplatform support
     WindowsUI* windowsUI;
-    bool result;
+    bool wndCreated;
+    int exitCode = 0;
 
     windowsUI = new WindowsUI;
     if (!windowsUI)
     {
-        return 0;
+        Logger::Log("Could not create new Windows GUI object");
+        return 1;
     }
 
-    result = windowsUI->Initialize();
-    if (result)
-    {
-        windowsUI->Run();
+    wndCreated = windowsUI->NewWindow("CriEngine", false);
+    
+    if (!wndCreated) {
+        Logger::Log("Could not complete window creation.");
+
+        windowsUI->Shutdown();
+        delete windowsUI;
+
+        return 1;
+    }
+
+    while (!exitCode && windowsUI->WindowExists()) {
+        exitCode = windowsUI->Run();
     }
 
     windowsUI->Shutdown();
     delete windowsUI;
 
-    return 0;
+    return exitCode;
 }
