@@ -1,5 +1,6 @@
 #include "thin_windows.h"
 #include "logger.h"
+#include "graphicsD3D.h"
 #include "windowsUI.h"
 
 int WindowsUI::nWindows = 0;
@@ -10,6 +11,8 @@ WindowsUI::WindowsUI()
 {
     appInstance = 0;
     wndHandle = 0;
+
+    graphics = NULL;
 }
 
 WindowsUI::~WindowsUI()
@@ -18,21 +21,42 @@ WindowsUI::~WindowsUI()
 
 bool WindowsUI::NewWindow(const LPCSTR & windowName, const bool & setToFullScreen)
 {
+    bool errors = false;
     if (wndHandle != 0) {
         Logger::Log("Tried to create a new window, but old window handle was found for this instance");
         return false;
     }
 
     wndName = windowName;
+    graphics = new GraphicsD3D;
+    if (!graphics) {
+        Logger::Log("Could not create new graphics object.");
+        return false;
+    }
 
-    return InitializeWindow(setToFullScreen);
+    errors = !InitializeWindow(setToFullScreen);
+    errors |= !graphics->Initialize();
+
+    return !errors;
 }
 
 void WindowsUI::Shutdown()
 {
-    ShutdownWindow();
+    if (graphics) {
+        graphics->ShutDown();
+        delete graphics;
+        graphics = 0;
+    }
 
-    return;
+    if (wndHandle) {
+        DestroyWindow(wndHandle);
+        wndHandle = NULL;
+        nWindows--;
+    }
+
+    if (nWindows == 0) {
+        UnregisterWndClass();
+    }
 }
 
 int WindowsUI::Run()
@@ -76,7 +100,10 @@ bool WindowsUI::SetFullscreen(const bool & setToFullScreen)
             return false;
         }
 
-        result = SetWindowPos(wndHandle, HWND_TOPMOST, 0, 0, pixelWidth = GetSystemMetrics(SM_CXSCREEN), pixelHeight = GetSystemMetrics(SM_CYSCREEN), SWP_SHOWWINDOW);
+        totalPixelWidth = insidePixelWidth = GetSystemMetrics(SM_CXSCREEN);
+        totalPixelHeight = insidePixelHeight = GetSystemMetrics(SM_CYSCREEN);
+
+        result = SetWindowPos(wndHandle, HWND_TOPMOST, 0, 0, totalPixelWidth, totalPixelHeight, SWP_SHOWWINDOW);
 
         if (!result) {
             Logger::LogWindowsErrorCode("setting window position to fullscreen");
@@ -87,7 +114,9 @@ bool WindowsUI::SetFullscreen(const bool & setToFullScreen)
         return true;
     }
 
-    if (!setToFullScreen) {
+    if (!setToFullScreen && isFullscreen) {
+        RECT rc;
+
         wndStyle |= WS_SYSMENU | WS_MINIMIZEBOX;
         result = SetWindowLongPtr(wndHandle, GWL_STYLE, wndStyle);
 
@@ -96,12 +125,19 @@ bool WindowsUI::SetFullscreen(const bool & setToFullScreen)
             return false;
         }
 
-        int xPos = (GetSystemMetrics(SM_CXSCREEN) - pixelWidth) / 2;
-        int yPos = (GetSystemMetrics(SM_CYSCREEN) - pixelHeight) / 2;
-        pixelWidth = defaultPixelWidth;
-        pixelHeight = defaultPixelHeight;
+        insidePixelWidth = defaultPixelWidth;
+        insidePixelHeight = defaultPixelHeight;
 
-        result = SetWindowPos(wndHandle, HWND_TOPMOST, xPos, yPos, pixelWidth, pixelHeight, SWP_SHOWWINDOW);
+        SetRect(&rc, 0, 0, insidePixelWidth, insidePixelHeight);
+        AdjustWindowRect(&rc, wndStyle, false);
+
+        totalPixelWidth = rc.right - rc.left;
+        totalPixelHeight = rc.bottom - rc.top;
+
+        int xPos = (GetSystemMetrics(SM_CXSCREEN) - totalPixelWidth) / 2;
+        int yPos = (GetSystemMetrics(SM_CYSCREEN) - totalPixelHeight) / 2;
+
+        result = SetWindowPos(wndHandle, HWND_TOPMOST, xPos, yPos, totalPixelWidth, totalPixelHeight, SWP_SHOWWINDOW);
 
         if (!result) {
             Logger::LogWindowsErrorCode("setting window position to windowed");
@@ -120,13 +156,18 @@ bool WindowsUI::WindowExists()
     return wndHandle != NULL;
 }
 
+bool WindowsUI::IsFullscreen()
+{
+    return isFullscreen;
+}
+
 LRESULT WindowsUI::MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
         case WM_CLOSE:
         {
-            ShutdownWindow();
+            Shutdown();
 
             if (nWindows == 0) {
                 PostQuitMessage(0);
@@ -186,7 +227,7 @@ LRESULT WindowsUI::MsgForwarder(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 bool WindowsUI::Frame()
 {
-    return true;
+    return graphics->Frame();
 }
 
 bool WindowsUI::InitializeWindow(const bool & setToFullScreen)
@@ -205,8 +246,8 @@ bool WindowsUI::InitializeWindow(const bool & setToFullScreen)
 
     if (setToFullScreen)
     {
-        pixelWidth = GetSystemMetrics(SM_CXSCREEN);
-        pixelHeight = GetSystemMetrics(SM_CYSCREEN);
+        totalPixelWidth = insidePixelWidth = GetSystemMetrics(SM_CXSCREEN);
+        totalPixelHeight = insidePixelHeight = GetSystemMetrics(SM_CYSCREEN);
 
         posX = posY = 0;
 
@@ -216,13 +257,20 @@ bool WindowsUI::InitializeWindow(const bool & setToFullScreen)
     }
     else
     {
-        pixelWidth = defaultPixelWidth;
-        pixelHeight = defaultPixelHeight;
-
-        posX = (GetSystemMetrics(SM_CXSCREEN) - pixelWidth) / 2;
-        posY = (GetSystemMetrics(SM_CYSCREEN) - pixelHeight) / 2;
+        RECT rc;
 
         wndStyle |= WS_SYSMENU | WS_MINIMIZEBOX;
+
+        insidePixelWidth = defaultPixelWidth;
+        insidePixelHeight = defaultPixelHeight;
+
+        SetRect(&rc, 0, 0, insidePixelWidth, insidePixelHeight);
+        AdjustWindowRect(&rc, wndStyle, false);
+        totalPixelWidth = rc.right - rc.left;
+        totalPixelHeight = rc.bottom - rc.top;
+
+        posX = (GetSystemMetrics(SM_CXSCREEN) - totalPixelWidth) / 2;
+        posY = (GetSystemMetrics(SM_CYSCREEN) - totalPixelHeight) / 2;
 
         isFullscreen = false;
     }
@@ -234,8 +282,8 @@ bool WindowsUI::InitializeWindow(const bool & setToFullScreen)
         wndStyle,
         posX,
         posY,
-        pixelWidth,
-        pixelHeight,
+        totalPixelWidth,
+        totalPixelHeight,
         NULL,
         NULL,
         appInstance,
@@ -301,15 +349,4 @@ void WindowsUI::UnregisterWndClass()
 {
     UnregisterClass(wndClassName, appInstance);
     appInstance = NULL;
-}
-
-void WindowsUI::ShutdownWindow()
-{
-    DestroyWindow(wndHandle);
-    wndHandle = NULL;
-    nWindows--;
-
-    if (nWindows == 0) {
-        UnregisterWndClass();
-    }
 }

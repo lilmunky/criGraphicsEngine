@@ -18,6 +18,9 @@
     <ClCompile Include="src\WinMain.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="src\graphicsD3D.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\windowsUI.h">
@@ -27,6 +30,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="src\thin_windows.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphicsD3D.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

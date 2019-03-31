@@ -2,7 +2,11 @@
 
 #include <string>
 
+class GraphicsD3D;
+
 class WindowsUI {
+    friend GraphicsD3D;
+
 public:
     WindowsUI();
     WindowsUI(const WindowsUI&) = delete;
@@ -15,6 +19,7 @@ public:
 
     bool SetFullscreen(const bool& setToFullScreen);
     bool WindowExists();
+    bool IsFullscreen();
 
 private:
     static int nWindows;
@@ -22,18 +27,20 @@ private:
     static HINSTANCE appInstance;
     const LPCSTR wndClassName = "Engine";
     LPCSTR wndName;
-
     bool isFullscreen;
-    int pixelWidth;
-    int pixelHeight;
+    int insidePixelWidth;
+    int insidePixelHeight;
+    int totalPixelWidth;
+    int totalPixelHeight;
     int defaultPixelWidth = 640;
     int defaultPixelHeight = 480;
+    GraphicsD3D *graphics;
+
 
     bool Frame();
     bool InitializeWindow(const bool& setToFullScreen);
     bool RegisterWndClass();
     void UnregisterWndClass();
-    void ShutdownWindow();
 
     LRESULT MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK MsgForwarderSetup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
