@@ -1,6 +1,6 @@
 #include "thin_windows.h"
 #include "logger.h"
-#include "graphicsD3D.h"
+#include "graphicscontroller.h"
 #include "windowsUI.h"
 
 int WindowsUI::nWindows = 0;
@@ -12,7 +12,7 @@ WindowsUI::WindowsUI()
     appInstance = 0;
     wndHandle = 0;
 
-    graphics = NULL;
+    childGraphics = NULL;
 }
 
 WindowsUI::~WindowsUI()
@@ -28,24 +28,24 @@ bool WindowsUI::NewWindow(const LPCSTR & windowName, const bool & setToFullScree
     }
 
     wndName = windowName;
-    graphics = new GraphicsD3D;
-    if (!graphics) {
+    childGraphics = new GraphicsController;
+    if (!childGraphics) {
         Logger::Log("Could not create new graphics object.");
         return false;
     }
 
     errors = !InitializeWindow(setToFullScreen);
-    errors |= !graphics->Initialize();
+    errors |= !childGraphics->Initialize(reinterpret_cast<WindowsUI*>(this));
 
     return !errors;
 }
 
 void WindowsUI::Shutdown()
 {
-    if (graphics) {
-        graphics->ShutDown();
-        delete graphics;
-        graphics = 0;
+    if (childGraphics) {
+        childGraphics->Shutdown();
+        delete childGraphics;
+        childGraphics = 0;
     }
 
     if (wndHandle) {
@@ -74,6 +74,15 @@ int WindowsUI::Run()
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
+    }
+
+    /* During PeekMessage non-queued messages are sent to 
+     * the window procedure. If after this part I don't
+     * check for window termination, Frame() could be called
+     * on an empty WindowsUI. 
+     */
+    if (wndHandle == NULL) {
+        return 0;
     }
 
     if (!Frame())
@@ -156,11 +165,6 @@ bool WindowsUI::WindowExists()
     return wndHandle != NULL;
 }
 
-bool WindowsUI::IsFullscreen()
-{
-    return isFullscreen;
-}
-
 LRESULT WindowsUI::MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
@@ -227,7 +231,7 @@ LRESULT WindowsUI::MsgForwarder(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 bool WindowsUI::Frame()
 {
-    return graphics->Frame();
+    return childGraphics->Frame();
 }
 
 bool WindowsUI::InitializeWindow(const bool & setToFullScreen)

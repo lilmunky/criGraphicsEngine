@@ -1,3 +1,5 @@
+/* TODO: Get rid of this logger and use something thread-safe and simpler */
+
 #include "thin_windows.h"
 #include <iostream>
 #include "logger.h"

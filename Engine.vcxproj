@@ -135,7 +135,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\graphicsD3D.cpp" />
+    <ClCompile Include="src\graphicscontroller.cpp" />
+    <ClCompile Include="src\graphicsd3d.cpp" />
     <ClCompile Include="src\logger.cpp" />
     <ClCompile Include="src\WinMain.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
@@ -143,7 +144,8 @@
     <ClCompile Include="src\windowsUI.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\graphicsD3D.h" />
+    <ClInclude Include="src\graphicscontroller.h" />
+    <ClInclude Include="src\graphicsd3d.h" />
     <ClInclude Include="src\logger.h" />
     <ClInclude Include="src\thin_windows.h" />
     <ClInclude Include="src\windowsUI.h" />

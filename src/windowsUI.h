@@ -2,10 +2,10 @@
 
 #include <string>
 
-class GraphicsD3D;
+class GraphicsController;
 
 class WindowsUI {
-    friend GraphicsD3D;
+    friend GraphicsController;
 
 public:
     WindowsUI();
@@ -19,7 +19,6 @@ public:
 
     bool SetFullscreen(const bool& setToFullScreen);
     bool WindowExists();
-    bool IsFullscreen();
 
 private:
     static int nWindows;
@@ -34,7 +33,7 @@ private:
     int totalPixelHeight;
     int defaultPixelWidth = 640;
     int defaultPixelHeight = 480;
-    GraphicsD3D *graphics;
+    GraphicsController *childGraphics;
 
 
     bool Frame();

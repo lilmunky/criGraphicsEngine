@@ -18,7 +18,10 @@
     <ClCompile Include="src\WinMain.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="src\graphicsD3D.cpp">
+    <ClCompile Include="src\graphicsd3d.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphicscontroller.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -32,7 +35,10 @@
     <ClInclude Include="src\thin_windows.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="src\graphicsD3D.h">
+    <ClInclude Include="src\graphicsd3d.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphicscontroller.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
