@@ -13,7 +13,7 @@ public:
     WindowsUI& operator=(const WindowsUI&) = delete;
     ~WindowsUI();
 
-    bool NewWindow(const LPCSTR& windowName, const bool& setToFullScreen);
+    bool NewWindow(const LPCWSTR& windowName, const bool& setToFullScreen);
     void Shutdown();
     int Run();
 
@@ -24,8 +24,8 @@ private:
     static int nWindows;
     HWND wndHandle;
     static HINSTANCE appInstance;
-    const LPCSTR wndClassName = "Engine";
-    LPCSTR wndName;
+    const LPCWSTR wndClassName = L"Engine";
+    LPCWSTR wndName;
     bool isFullscreen;
     int insidePixelWidth;
     int insidePixelHeight;

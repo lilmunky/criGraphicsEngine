@@ -19,18 +19,18 @@ WindowsUI::~WindowsUI()
 {
 }
 
-bool WindowsUI::NewWindow(const LPCSTR & windowName, const bool & setToFullScreen)
+bool WindowsUI::NewWindow(const LPCWSTR & windowName, const bool & setToFullScreen)
 {
     bool errors = false;
     if (wndHandle != 0) {
-        Logger::Log("Tried to create a new window, but old window handle was found for this instance");
+        Logger::Log(L"Tried to create a new window, but old window handle was found for this instance");
         return false;
     }
 
     wndName = windowName;
     childGraphics = new GraphicsController;
     if (!childGraphics) {
-        Logger::Log("Could not create new graphics object.");
+        Logger::Log(L"Could not create new graphics object.");
         return false;
     }
 
@@ -62,7 +62,7 @@ void WindowsUI::Shutdown()
 int WindowsUI::Run()
 {
     if (wndHandle == NULL) {
-        Logger::Log("Tried to execute Run but no active window was found associated with this WindowsUI instance.");
+        Logger::Log(L"Tried to execute Run but no active window was found associated with this WindowsUI instance.");
         return 1;
     }
 
@@ -87,7 +87,7 @@ int WindowsUI::Run()
 
     if (!Frame())
     {
-        Logger::Log("Frame processing encountered an error.");
+        Logger::Log(L"Frame processing encountered an error.");
         PostQuitMessage(1);
         return 1;
     }
@@ -105,7 +105,7 @@ bool WindowsUI::SetFullscreen(const bool & setToFullScreen)
         result = SetWindowLongPtr(wndHandle, GWL_STYLE, wndStyle);
 
         if (!result) {
-            Logger::LogWindowsErrorCode("setting window style to fullscreen");
+            Logger::LogWindowsErrorCode(L"setting window style to fullscreen");
             return false;
         }
 
@@ -115,7 +115,7 @@ bool WindowsUI::SetFullscreen(const bool & setToFullScreen)
         result = SetWindowPos(wndHandle, HWND_TOPMOST, 0, 0, totalPixelWidth, totalPixelHeight, SWP_SHOWWINDOW);
 
         if (!result) {
-            Logger::LogWindowsErrorCode("setting window position to fullscreen");
+            Logger::LogWindowsErrorCode(L"setting window position to fullscreen");
             return false;
         }
 
@@ -130,7 +130,7 @@ bool WindowsUI::SetFullscreen(const bool & setToFullScreen)
         result = SetWindowLongPtr(wndHandle, GWL_STYLE, wndStyle);
 
         if (!result) {
-            Logger::LogWindowsErrorCode("setting window style to windowed");
+            Logger::LogWindowsErrorCode(L"setting window style to windowed");
             return false;
         }
 
@@ -149,7 +149,7 @@ bool WindowsUI::SetFullscreen(const bool & setToFullScreen)
         result = SetWindowPos(wndHandle, HWND_TOPMOST, xPos, yPos, totalPixelWidth, totalPixelHeight, SWP_SHOWWINDOW);
 
         if (!result) {
-            Logger::LogWindowsErrorCode("setting window position to windowed");
+            Logger::LogWindowsErrorCode(L"setting window position to windowed");
             return false;
         }
 
@@ -195,7 +195,7 @@ LRESULT WindowsUI::MsgForwarderSetup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         SetLastError(0);
         SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(currentWindow));
         if (GetLastError() != 0) {
-            Logger::LogWindowsErrorCode("inserting current window pointer in window handle");
+            Logger::LogWindowsErrorCode(L"inserting current window pointer in window handle");
             PostQuitMessage(1);
             return 1;
         }
@@ -203,7 +203,7 @@ LRESULT WindowsUI::MsgForwarderSetup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         SetLastError(0);
         SetWindowLongPtr(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&WindowsUI::MsgForwarder));
         if (GetLastError() != 0) {
-            Logger::LogWindowsErrorCode("changing window procedure to the actual forwarder");
+            Logger::LogWindowsErrorCode(L"changing window procedure to the actual forwarder");
             PostQuitMessage(1);
             return 1;
         }
@@ -219,7 +219,7 @@ LRESULT WindowsUI::MsgForwarder(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     LONG_PTR result = GetWindowLongPtr(hWnd, GWLP_USERDATA);
 
     if (!result) {
-        Logger::LogWindowsErrorCode("retrieving current window pointer from window handle");
+        Logger::LogWindowsErrorCode(L"retrieving current window pointer from window handle");
         PostQuitMessage(1);
         return 1;
     }
@@ -243,7 +243,7 @@ bool WindowsUI::InitializeWindow(const bool & setToFullScreen)
         bool registered = RegisterWndClass();
 
         if (!registered) {
-            Logger::Log("Could not register window class.");
+            Logger::Log(L"Could not register window class.");
             return false;
         }
     }
@@ -298,7 +298,7 @@ bool WindowsUI::InitializeWindow(const bool & setToFullScreen)
         nWindows++;
     }
     else {
-        Logger::LogWindowsErrorCode("creating window " + *wndName);
+        Logger::LogWindowsErrorCode(L"creating window " + *wndName);
 
         if (nWindows == 0) {
             UnregisterWndClass();
@@ -311,7 +311,7 @@ bool WindowsUI::InitializeWindow(const bool & setToFullScreen)
     SetForegroundWindow(wndHandle);
 
     if (!SetFocus(wndHandle)) {
-        Logger::LogWindowsErrorCode("setting focus to window " + *wndName);
+        Logger::LogWindowsErrorCode(L"setting focus to window " + *wndName);
         return false;
     }
 
@@ -324,7 +324,7 @@ bool WindowsUI::RegisterWndClass()
 
     appInstance = GetModuleHandle(NULL);
     if (!appInstance) {
-        Logger::LogWindowsErrorCode("getting module instance");
+        Logger::LogWindowsErrorCode(L"getting module instance");
         return false;
     }
 
@@ -342,7 +342,7 @@ bool WindowsUI::RegisterWndClass()
     wc.cbSize = sizeof(WNDCLASSEX);
 
     if (!RegisterClassEx(&wc)) {
-        Logger::LogWindowsErrorCode("registering class");
+        Logger::LogWindowsErrorCode(L"registering class");
         return false;
     }
 

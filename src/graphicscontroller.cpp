@@ -16,12 +16,12 @@ GraphicsController::~GraphicsController()
 
 bool GraphicsController::Initialize(WindowsUI* const wnd, bool vSync, float scDepth, float scNear) {
     if (!wnd) {
-        Logger::Log("The window pointer for graphics initialization is void.");
+        Logger::Log(L"The window pointer for graphics initialization is void.");
         return false;
     }
 
     if (!wnd->wndHandle) {
-        Logger::Log("No window found to attach graphics to.");
+        Logger::Log(L"No window found to attach graphics to.");
         return false;
     }
 
@@ -44,7 +44,7 @@ bool GraphicsController::Initialize(WindowsUI* const wnd, bool vSync, float scDe
         screen_near
     );
     if (!result) {
-        Logger::Log("Could not initialize Direct3D object.");
+        Logger::Log(L"Could not initialize Direct3D object.");
         return false;
     }
 

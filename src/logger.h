@@ -16,24 +16,24 @@ class Logger {
 private:
     static bool initialized;
     static bool errorInit;
-    static string folder;
-    static string completePath;
-    static const string fileName;
-    static const string logFolder;
-    static const string ext;
+    static wstring folder;
+    static wstring completePath;
+    static const wstring fileName;
+    static const wstring logFolder;
+    static const wstring ext;
     static LoggerDestroyer destroyer;
 
     static void InitializeLogger();
 
-    static void LogNoFormat(const string& text);
+    static void LogNoFormat(const wstring& text);
 
 public:
     virtual ~Logger() = 0;
 
     static void InitLog();
-    static void Log(const string& text);
-    static void LogWindowsErrorCode(const string& context);
-    static void LogD3DErrorCode(const string& context, const HRESULT& errorCode);
+    static void Log(const wstring& text);
+    static void LogWindowsErrorCode(const wstring& context);
+    static void LogD3DErrorCode(const wstring& context, const HRESULT& errorCode);
 };
 
-string CombinePaths(const string& p1, const string& p2);
+wstring CombinePaths(const wstring& p1, const wstring& p2);

@@ -24,7 +24,7 @@ GraphicsD3D::~GraphicsD3D()
 bool GraphicsD3D::Initialize(GraphicsController * graphics, int screenWidth, int screenHeight, bool vsync, HWND hwnd, float screenDepth, float screenNear)
 {
     if (!graphics) {
-        Logger::Log("Graphics contoller pointer is invalid for Direct3D object.");
+        Logger::Log(L"Graphics contoller pointer is invalid for Direct3D object.");
         return false;
     }
 
@@ -54,42 +54,42 @@ bool GraphicsD3D::Initialize(GraphicsController * graphics, int screenWidth, int
     result = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&factory);
     if (FAILED(result))
     {
-        Logger::LogD3DErrorCode("creating DirectX graphics interface factory", result);
+        Logger::LogD3DErrorCode(L"creating DirectX graphics interface factory", result);
         return false;
     }
 
     result = factory->EnumAdapters(0, &adapter);
     if (FAILED(result))
     {
-        Logger::LogD3DErrorCode("creating adapter for graphics interface", result);
+        Logger::LogD3DErrorCode(L"creating adapter for graphics interface", result);
         return false;
     }
 
     result = adapter->EnumOutputs(0, &adapterOutput);
     if (FAILED(result))
     {
-        Logger::LogD3DErrorCode("enumerating primary adapter output", result);
+        Logger::LogD3DErrorCode(L"enumerating primary adapter output", result);
         return false;
     }
 
     result = adapterOutput->GetDisplayModeList(displayFormat, DXGI_ENUM_MODES_INTERLACED, &numModes, NULL);
     if (FAILED(result))
     {
-        Logger::LogD3DErrorCode("retrieving the modes that fit the display format for the adapter output (" + to_string(displayFormat) + ")", result);
+        Logger::LogD3DErrorCode(L"retrieving the modes that fit the display format for the adapter output (" + to_wstring(displayFormat) + L")", result);
         return false;
     }
 
     displayModeList = new DXGI_MODE_DESC[numModes];
     if (!displayModeList)
     {
-        Logger::LogD3DErrorCode("creating diplay modes array", result);
+        Logger::LogD3DErrorCode(L"creating diplay modes array", result);
         return false;
     }
 
     result = adapterOutput->GetDisplayModeList(displayFormat, DXGI_ENUM_MODES_INTERLACED, &numModes, displayModeList);
     if (FAILED(result))
     {
-        Logger::LogD3DErrorCode("filling display modes array", result);
+        Logger::LogD3DErrorCode(L"filling display modes array", result);
         return false;
     }
 
@@ -108,7 +108,7 @@ bool GraphicsD3D::Initialize(GraphicsController * graphics, int screenWidth, int
     result = adapter->GetDesc(&adapterDesc);
     if (FAILED(result))
     {
-        Logger::LogD3DErrorCode("getting the adapter description", result);
+        Logger::LogD3DErrorCode(L"getting the adapter description", result);
         return false;
     }
 
@@ -117,10 +117,10 @@ bool GraphicsD3D::Initialize(GraphicsController * graphics, int screenWidth, int
     error = wcstombs_s(&stringLength, videoCardDescription, 128, adapterDesc.Description, 128);
     if (error)
     {
-        char *errBuffer = new char[256];
-        strerror_s(errBuffer, 200, errno);
-        string errStr(errBuffer);
-        Logger::Log("Error getting adapter name:" + errStr);
+        wchar_t *errBuffer = new wchar_t[256];
+        _wcserror_s(errBuffer, 200, errno);
+        wstring errStr(errBuffer);
+        Logger::Log(L"Error getting adapter name:" + errStr);
         delete errBuffer;
         return false;
     }
@@ -180,21 +180,21 @@ bool GraphicsD3D::Initialize(GraphicsController * graphics, int screenWidth, int
     );
     if (FAILED(result))
     {
-        Logger::LogD3DErrorCode("creating Direct3D device and swapchain", result);
+        Logger::LogD3DErrorCode(L"creating Direct3D device and swapchain", result);
         return false;
     }
 
     result = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBuffer);
     if(FAILED(result))
     {
-        Logger::LogD3DErrorCode("getting the pointer to the back buffer", result);
+        Logger::LogD3DErrorCode(L"getting the pointer to the back buffer", result);
         return false;
     }
 
     result = device->CreateRenderTargetView(backBuffer, NULL, &renderTargetView);
     if(FAILED(result))
     {
-        Logger::LogD3DErrorCode("creating the render target view", result);
+        Logger::LogD3DErrorCode(L"creating the render target view", result);
         return false;
     }
 
@@ -218,7 +218,7 @@ bool GraphicsD3D::Initialize(GraphicsController * graphics, int screenWidth, int
     result = device->CreateTexture2D(&depthBufferDesc, NULL, &depthStencilBuffer);
     if (FAILED(result))
     {
-        Logger::LogD3DErrorCode("creating 2d texture", result);
+        Logger::LogD3DErrorCode(L"creating 2d texture", result);
         return false;
     }
 
@@ -240,7 +240,7 @@ bool GraphicsD3D::Initialize(GraphicsController * graphics, int screenWidth, int
     result = device->CreateDepthStencilState(&depthStencilDesc, &depthStencilState);
     if (FAILED(result))
     {
-        Logger::LogD3DErrorCode("creating depth stencil state", result);
+        Logger::LogD3DErrorCode(L"creating depth stencil state", result);
         return false;
     }
     deviceContext->OMSetDepthStencilState(depthStencilState, 1);
@@ -252,7 +252,7 @@ bool GraphicsD3D::Initialize(GraphicsController * graphics, int screenWidth, int
     result = device->CreateDepthStencilView(depthStencilBuffer, &depthStencilViewDesc, &depthStencilView);
     if (FAILED(result))
     {
-        Logger::LogD3DErrorCode("creating depth stencil view", result);
+        Logger::LogD3DErrorCode(L"creating depth stencil view", result);
         return false;
     }
     deviceContext->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
@@ -271,7 +271,7 @@ bool GraphicsD3D::Initialize(GraphicsController * graphics, int screenWidth, int
     result = device->CreateRasterizerState(&rasterDesc, &rasterState);
     if (FAILED(result))
     {
-        Logger::LogD3DErrorCode("creating rasterizer state (default rasterizer state)", result);
+        Logger::LogD3DErrorCode(L"creating rasterizer state (default rasterizer state)", result);
         return false;
     }
     deviceContext->RSSetState(rasterState);

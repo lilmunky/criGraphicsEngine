@@ -15,22 +15,22 @@ using namespace chrono;
 
 bool Logger::errorInit = false;
 bool Logger::initialized = false;
-string Logger::folder;
-string Logger::completePath;
-const string Logger::fileName = "logs";
-const string Logger::logFolder = "log";
-const string Logger::ext = ".CElog";
+wstring Logger::folder;
+wstring Logger::completePath;
+const wstring Logger::fileName = L"logs";
+const wstring Logger::logFolder = L"log";
+const wstring Logger::ext = L".CElog";
 LoggerDestroyer Logger::destroyer;
 
 void Logger::InitializeLogger() {
-    char appPath[MAX_PATH];
+    wchar_t appPath[MAX_PATH];
     GetModuleFileName(NULL, appPath, MAX_PATH);
-    string::size_type pos = string(appPath).find_last_of("\\");
-    strcpy_s(appPath, string(appPath).substr(0, pos).c_str());
+    wstring::size_type pos = wstring(appPath).find_last_of(L'\\');
+    wcscpy_s(appPath, wstring(appPath).substr(0, pos).c_str());
 
     folder = CombinePaths(appPath, logFolder);
-    struct stat info;
-    if (stat(folder.c_str(), &info) != 0){
+    struct _stat64i32 info;
+    if (_wstat(folder.c_str(), &info) != 0){
         if (errno == ENOENT) {
             if (CreateDirectory(folder.c_str(), NULL) == 0) {
                 errorInit = true;
@@ -49,7 +49,7 @@ void Logger::InitializeLogger() {
 
     completePath = CombinePaths(folder, fileName) + ext;
 
-    ofstream logFile;
+    wofstream logFile;
     time_t secEpoch = system_clock::to_time_t(system_clock::now());
     tm nowUCT;
     gmtime_s(&nowUCT, &secEpoch);
@@ -61,7 +61,7 @@ void Logger::InitializeLogger() {
     initialized = true;
 }
 
-void Logger::LogNoFormat(const string& text)
+void Logger::LogNoFormat(const wstring& text)
 {
     if (!initialized) {
         InitializeLogger();
@@ -71,7 +71,7 @@ void Logger::LogNoFormat(const string& text)
         return;
     }
 
-    ofstream logFile;
+    wofstream logFile;
     logFile.open(completePath, ios_base::app);
     logFile << text.c_str();
     logFile.close();
@@ -84,7 +84,7 @@ void Logger::InitLog()
     }
 }
 
-void Logger::Log(const string& text)
+void Logger::Log(const wstring& text)
 {
     if (!initialized) {
         InitializeLogger();
@@ -94,43 +94,43 @@ void Logger::Log(const string& text)
         return;
     }
 
-    ofstream logFile;
+    wofstream logFile;
     time_t secEpoch = system_clock::to_time_t(system_clock::now());
     tm nowUCT;
     gmtime_s(&nowUCT, &secEpoch);
     logFile.open(completePath, ios_base::app);
 
-    logFile << '[' << nowUCT.tm_hour << ':' << nowUCT.tm_min << ':' << nowUCT.tm_sec << '.' << 
-        (duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() % 1000) << "] ";
+    logFile << L'[' << nowUCT.tm_hour << L':' << nowUCT.tm_min << L':' << nowUCT.tm_sec << L'.' << 
+        (duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() % 1000) << L"] ";
     logFile << text.c_str() << endl;
     
     logFile.close();
 }
 
-void Logger::LogWindowsErrorCode(const string& context)
+void Logger::LogWindowsErrorCode(const wstring& context)
 {
     DWORD dwError = GetLastError();
     _com_error err(dwError);
-    stringstream strErr;
+    wstringstream strErr;
     strErr << hex << dwError;
-    Logger::Log("Error " + context + ": 0x" + strErr.str() + " - " + err.ErrorMessage());
+    Logger::Log(L"Error " + context + L": 0x" + strErr.str() + L" - " + err.ErrorMessage());
 }
 
-void Logger::LogD3DErrorCode(const string& context, const HRESULT& errorCode)
+void Logger::LogD3DErrorCode(const wstring& context, const HRESULT& errorCode)
 {
     _com_error err(errorCode);
-    stringstream strErr;
+    wstringstream strErr;
     strErr << hex << errorCode;
-    Logger::Log("Directx error - " + context + ": 0x" + strErr.str() + " - " + err.ErrorMessage());
+    Logger::Log(L"Directx error - " + context + L": 0x" + strErr.str() + L" - " + err.ErrorMessage());
 }
 
-string CombinePaths(const string& p1, const string& p2) {
+wstring CombinePaths(const wstring& p1, const wstring& p2) {
 
-    if (p1.at(p1.length() - 1) == '\\') {
+    if (p1.at(p1.length() - 1) == L'\\') {
         return p1 + p2;
     }
 
-    return p1 + "\\" + p2;
+    return p1 + L'\\' + p2;
 }
 
 LoggerDestroyer::LoggerDestroyer()
@@ -139,5 +139,5 @@ LoggerDestroyer::LoggerDestroyer()
 
 LoggerDestroyer::~LoggerDestroyer()
 {
-    Logger::LogNoFormat("\n\n");
+    Logger::LogNoFormat(L"\n\n");
 }

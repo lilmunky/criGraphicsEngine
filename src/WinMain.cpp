@@ -12,14 +12,14 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nC
     windowsUI = new WindowsUI;
     if (!windowsUI)
     {
-        Logger::Log("Could not create new Windows GUI object");
+        Logger::Log(L"Could not create new Windows GUI object");
         return 1;
     }
 
-    wndCreated = windowsUI->NewWindow("CriEngine", false);
+    wndCreated = windowsUI->NewWindow(L"CriEngine", false);
     
     if (!wndCreated) {
-        Logger::Log("Could not complete window creation.");
+        Logger::Log(L"Could not complete window creation.");
 
         windowsUI->Shutdown();
         delete windowsUI;
