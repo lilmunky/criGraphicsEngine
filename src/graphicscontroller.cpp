@@ -2,12 +2,18 @@
 #include "logger.h"
 #include "windowsUI.h"
 #include "graphicsd3d.h"
+#include "cameraview.h"
+#include "vertexgeometry.h"
+#include "shadercontroller.h"
 #include "graphicscontroller.h"
 
 GraphicsController::GraphicsController()
 {
-    parentWindow = 0;
-    childGd3d = 0;
+    parentWindow = NULL;
+    childGd3d = NULL;
+    childCamera = NULL;
+    childShaderController = NULL;
+    childVertexGeom = NULL;
 }
 
 GraphicsController::~GraphicsController()
@@ -48,15 +54,49 @@ bool GraphicsController::Initialize(WindowsUI* const wnd, bool vSync, float scDe
         return false;
     }
 
+    childCamera = new CameraView;
+    childCamera->SetPosition(0.0f, 0.0f, -5.0f);
+
+    childVertexGeom = new VertexGeometry;
+    result = childVertexGeom->Initialize(childGd3d->GetDevice());
+    if (!result) {
+        Logger::Log(L"Could not initialize vertex geometry controller.");
+        return false;
+    }
+
+    childShaderController = new ShaderController;
+    result = childShaderController->Initialize(childGd3d->GetDevice(), wnd->wndHandle);
+    if (!result) {
+        Logger::Log(L"Could not initialize shader controller.");
+        return false;
+    }
+
     return true;
 }
 
 void GraphicsController::Shutdown()
 {
+    if (childCamera) {
+        delete childCamera;
+        childCamera = NULL;
+    }
+
+    if (childVertexGeom) {
+        childVertexGeom->Shutdown();
+        delete childVertexGeom;
+        childVertexGeom = NULL;
+    }
+
+    if (childShaderController) {
+        childShaderController->Shutdown();
+        delete childShaderController;
+        childShaderController = NULL;
+    }
+
     if (childGd3d) {
         childGd3d->Shutdown();
         delete childGd3d;
-        childGd3d = 0;
+        childGd3d = NULL;
     }
 }
 
@@ -67,7 +107,25 @@ bool GraphicsController::Frame()
 
 bool GraphicsController::Render()
 {
-    childGd3d->BeginScene(0.8f, 0.3f, 0.6f, 1.0f);
+    XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
+    bool result;
+
+    childGd3d->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
+
+    childCamera->Render();
+
+    childGd3d->GetWorldMatrix(worldMatrix);
+    childCamera->GetViewMatrix(viewMatrix);
+    childGd3d->GetProjectionMatrix(projectionMatrix);
+
+    childVertexGeom->Render(childGd3d->GetDeviceContext());
+
+    result = childShaderController->Render(childGd3d->GetDeviceContext(), childVertexGeom->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix);
+    if (!result)
+    {
+        Logger::Log(L"Could not render matrices through the shader controller.");
+        return false;
+    }
 
     childGd3d->EndScene();
 

@@ -2,6 +2,9 @@
 
 class WindowsUI;
 class GraphicsD3D;
+class ShaderController;
+class VertexGeometry;
+class CameraView;
 
 class GraphicsController {
     friend GraphicsD3D;
@@ -22,6 +25,9 @@ private:
     float screen_near;
     WindowsUI *parentWindow;
     GraphicsD3D *childGd3d;
+    CameraView *childCamera;
+    VertexGeometry *childVertexGeom;
+    ShaderController *childShaderController;
 
     bool Render();
 };

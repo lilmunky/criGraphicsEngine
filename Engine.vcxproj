@@ -19,18 +19,32 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\cameraview.h" />
     <ClInclude Include="src\graphicscontroller.h" />
     <ClInclude Include="src\graphicsD3D.h" />
     <ClInclude Include="src\logger.h" />
+    <ClInclude Include="src\vertexgeometry.h" />
+    <ClInclude Include="src\shadercontroller.h" />
     <ClInclude Include="src\thin_windows.h" />
     <ClInclude Include="src\windowsUI.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\cameraview.cpp" />
     <ClCompile Include="src\graphicscontroller.cpp" />
     <ClCompile Include="src\graphicsD3D.cpp" />
     <ClCompile Include="src\logger.cpp" />
+    <ClCompile Include="src\vertexgeometry.cpp" />
+    <ClCompile Include="src\shadercontroller.cpp" />
     <ClCompile Include="src\windowsUI.cpp" />
     <ClCompile Include="src\WinMain.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="src\color.ps">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="src\color.vs">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
