@@ -1,1 +1,4 @@
-I'm trying to put together something simple that can use DirectX11 and some geometry rules to obtain the basic features a graphics engine would have
+This is the corpse of a project which was aimed at creating a graphics engine for research purposes.
+The main goal was to learn how to use directX, but half of the effort has been put in dealing with the winuser window framework.
+This includes a (badly written) logger, a window class which supports having different instances alive together, the directX related part which only draws a triangle (but is ready for more).
+The project is discontinued, but feel free to use any part of it you might find useful.
